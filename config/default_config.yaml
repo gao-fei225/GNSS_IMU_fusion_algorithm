@@ -1,0 +1,54 @@
+# INS/GNSS 融合系统默认配置文件
+
+# 数据路径配置
+data_paths:
+  imu_data: "data/imu_data.txt"
+  gnss_nav: "data/gnss_nav.txt"          # GNSS导航解（松耦合用）
+  gnss_raw: "data/gnss_raw.txt"          # GNSS原始观测（紧耦合用）
+  reference: "data/reference.txt"         # 参考轨迹/姿态
+  output_dir: "results/"
+
+# IMU参数
+imu_params:
+  sample_rate: 100.0                      # 采样频率（Hz）
+  gyro_noise: 0.0001                      # 角速度噪声（rad/s/√Hz）
+  accel_noise: 0.001                      # 加速度噪声（m/s²/√Hz）
+  gyro_bias_walk: 0.00001                 # 陀螺零偏随机游走（rad/s²/√Hz）
+  accel_bias_walk: 0.0001                 # 加计零偏随机游走（m/s³/√Hz）
+
+# GNSS参数
+gnss_params:
+  output_rate: 1.0                        # 输出频率（Hz）
+  position_noise: 0.1                     # 位置噪声（m）
+  velocity_noise: 0.01                    # 速度噪声（m/s）
+  pseudorange_noise: 1.0                  # 伪距噪声（m）
+  doppler_noise: 0.1                      # 多普勒噪声（m/s）
+
+# ESKF参数
+eskf_params:
+  state_dim: 15                           # 误差状态维数（姿态3+速度3+位置3+陀螺偏3+加计偏3）
+  initial_cov:
+    attitude: 0.01                        # 初始姿态协方差（rad²）
+    velocity: 0.1                         # 初始速度协方差（m²/s²）
+    position: 1.0                         # 初始位置协方差（m²）
+    gyro_bias: 0.0001                     # 初始陀螺零偏协方差（rad²/s²）
+    accel_bias: 0.001                     # 初始加计零偏协方差（m²/s⁴）
+
+# 实验设置
+experiment:
+  enable_loose_coupling: true             # 启用松耦合
+  enable_tight_coupling: true             # 启用紧耦合
+  enable_constraints: true                # 启用约束（基线长度、零速等）
+  enable_nn_assist: false                 # 启用神经网络辅助（可选）
+  
+  # GNSS遮挡时间段（秒）
+  gnss_outages:
+    - [100, 130]                          # 第一段遮挡：100-130秒
+    - [200, 250]                          # 第二段遮挡：200-250秒
+  
+  # 约束设置
+  constraints:
+    baseline_length: 1.5                  # 双天线基线长度（m）
+    baseline_noise: 0.01                  # 基线长度约束噪声（m）
+    enable_zupt: true                     # 启用零速更新
+    zupt_threshold: 0.1                   # 零速检测阈值（m/s）

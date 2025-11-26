@@ -1,0 +1,107 @@
+# INS/GNSS 融合系统示例配置文件
+# 此文件展示了更详细的配置选项
+
+# 数据路径配置
+data_paths:
+  imu_data: "data/imu_data.txt"           # IMU原始数据文件
+  gnss_nav: "data/gnss_nav.txt"          # GNSS导航解（松耦合用）
+  gnss_raw: "data/gnss_raw.txt"          # GNSS原始观测（紧耦合用）
+  reference: "data/reference.txt"         # 参考轨迹/姿态（评估用）
+  output_dir: "results/"                  # 输出目录
+
+# IMU参数（车载MEMS IMU典型值）
+imu_params:
+  sample_rate: 100.0                      # 采样频率（Hz）
+  
+  # 噪声水平（白噪声）
+  gyro_noise: 0.0001                      # 角速度噪声（rad/s/√Hz），对应约0.3°/h
+  accel_noise: 0.001                      # 加速度噪声（m/s²/√Hz），对应约0.1mg
+  
+  # 零偏随机游走
+  gyro_bias_walk: 0.00001                 # 陀螺零偏游走（rad/s²/√Hz）
+  accel_bias_walk: 0.0001                 # 加计零偏游走（m/s³/√Hz）
+  
+  # 初始零偏（可选，如果已知）
+  initial_gyro_bias: [0.0, 0.0, 0.0]     # 初始陀螺零偏（rad/s）
+  initial_accel_bias: [0.0, 0.0, 0.0]    # 初始加计零偏（m/s²）
+
+# GNSS参数
+gnss_params:
+  output_rate: 1.0                        # 输出频率（Hz）
+  
+  # 导航解精度（用于松耦合）
+  position_noise: 0.1                     # 位置噪声标准差（m）
+  velocity_noise: 0.01                    # 速度噪声标准差（m/s）
+  
+  # 原始观测精度（用于紧耦合）
+  pseudorange_noise: 1.0                  # 伪距噪声标准差（m）
+  doppler_noise: 0.1                      # 多普勒噪声标准差（m/s）
+  
+  # 双天线配置
+  dual_antenna: true                      # 是否使用双天线
+  baseline_vector: [1.5, 0.0, 0.0]       # 基线向量（m，机体系）
+
+# ESKF参数
+eskf_params:
+  state_dim: 15                           # 误差状态维数
+  
+  # 初始协方差（对角元素）
+  initial_cov:
+    attitude: 0.01                        # 初始姿态协方差（rad²），约5.7°
+    velocity: 0.1                         # 初始速度协方差（m²/s²）
+    position: 1.0                         # 初始位置协方差（m²）
+    gyro_bias: 0.0001                     # 初始陀螺零偏协方差（rad²/s²）
+    accel_bias: 0.001                     # 初始加计零偏协方差（m²/s⁴）
+  
+  # 量测噪声放大因子（可选，用于调节滤波器信任度）
+  measurement_noise_scale: 1.0            # 量测噪声放大因子
+  process_noise_scale: 1.0                # 过程噪声放大因子
+
+# 实验设置
+experiment:
+  # 算法开关
+  enable_loose_coupling: true             # 启用松耦合ESKF
+  enable_tight_coupling: true             # 启用紧耦合ESKF
+  enable_constraints: true                # 启用约束（基线长度、零速等）
+  enable_nn_assist: false                 # 启用神经网络辅助（可选）
+  
+  # GNSS遮挡模拟（秒）
+  gnss_outages:
+    - [100, 130]                          # 第一段遮挡：100-130秒（30秒）
+    - [200, 250]                          # 第二段遮挡：200-250秒（50秒）
+  
+  # 约束设置
+  constraints:
+    # 基线长度约束
+    baseline_length: 1.5                  # 双天线基线长度（m）
+    baseline_noise: 0.01                  # 基线长度约束噪声（m）
+    enable_baseline_constraint: true      # 启用基线长度约束
+    
+    # 零速更新（ZUPT）
+    enable_zupt: true                     # 启用零速更新
+    zupt_threshold: 0.1                   # 零速检测阈值（m/s）
+    zupt_noise: 0.001                     # 零速约束噪声（m/s）
+    
+    # 零角速度约束
+    enable_zaru: false                    # 启用零角速度更新
+    zaru_threshold: 0.01                  # 零角速度检测阈值（rad/s）
+  
+  # 初始状态（如果已知）
+  initial_state:
+    position: [0.0, 0.0, 0.0]            # 初始位置（m，ENU坐标系）
+    velocity: [0.0, 0.0, 0.0]            # 初始速度（m/s）
+    attitude_euler: [0.0, 0.0, 0.0]      # 初始姿态（rad，Roll-Pitch-Yaw）
+  
+  # 评估设置
+  evaluation:
+    compute_full_trajectory: true         # 计算全程轨迹误差
+    compute_segmented_errors: true        # 计算分段误差（正常期/遮挡期）
+    generate_plots: true                  # 生成可视化图表
+    generate_tables: true                 # 生成误差统计表格
+    
+  # 可视化设置
+  visualization:
+    figure_dpi: 300                       # 图片分辨率（DPI）
+    figure_format: 'png'                  # 图片格式（png/pdf/svg）
+    show_plots: false                     # 是否显示图表（运行时）
+    save_plots: true                      # 是否保存图表到文件
