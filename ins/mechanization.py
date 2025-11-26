@@ -111,23 +111,28 @@ class INSMechanization:
         """
         使用加速度更新速度
         
+        注意：加速度计测量的是比力（specific force），即 f = a - g
+        其中 a 是真实加速度，g 是重力加速度
+        要得到真实加速度：a = f + g
+        
         步骤：
-        1. 将机体系加速度旋转到导航系
-        2. 减去重力加速度
+        1. 将机体系比力旋转到导航系
+        2. 加上重力加速度得到真实加速度
         3. 积分得到速度变化
         
         Args:
-            accel: 三轴加速度 [ax, ay, az]（m/s²，机体坐标系）
+            accel: 三轴比力 [fx, fy, fz]（m/s²，机体坐标系，加速度计读数）
             dt: 时间间隔（秒）
         """
         # 获取旋转矩阵（机体系到导航系）
         C_b_n = self.get_rotation_matrix()
         
-        # 将机体系加速度转换到导航系
-        accel_nav = C_b_n @ accel
+        # 将机体系比力转换到导航系
+        specific_force_nav = C_b_n @ accel
         
-        # 减去重力加速度（导航系中的重力向量）
-        accel_nav = accel_nav - self.gravity
+        # 加上重力加速度得到真实加速度
+        # a = f + g（注意：这里加上重力，因为比力 f = a - g）
+        accel_nav = specific_force_nav + self.gravity
         
         # 积分得到速度：v(t+dt) = v(t) + a * dt
         self.velocity = self.velocity + accel_nav * dt
