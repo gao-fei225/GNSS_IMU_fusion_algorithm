@@ -7,8 +7,8 @@ from pathlib import Path
 import numpy as np
 import sys
 
-# 确保可以导入项目模块
-project_root = Path(__file__).parent
+# 确保可以导入项目模块（test目录的父目录是项目根目录）
+project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 # 直接导入模块文件避免与内置io模块冲突
@@ -38,8 +38,8 @@ def generate_test_data():
     print("生成测试数据")
     print("=" * 60)
     
-    # 创建data目录
-    data_dir = Path(__file__).parent / 'data'
+    # 创建data目录（在项目根目录下）
+    data_dir = Path(__file__).parent.parent / 'data'
     data_dir.mkdir(exist_ok=True)
     
     # 生成IMU测试数据
@@ -224,7 +224,7 @@ def cleanup_test_data():
     print("清理测试数据")
     print("=" * 60)
     
-    data_dir = Path(__file__).parent / 'data'
+    data_dir = Path(__file__).parent.parent / 'data'
     test_files = ['test_imu.txt', 'test_gnss_nav.txt', 'test_gnss_raw.txt']
     
     for filename in test_files:
