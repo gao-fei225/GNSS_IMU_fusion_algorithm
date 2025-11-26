@@ -69,6 +69,8 @@ tmp/
 
 # 测试生成的文件
 **/test_output_*.yaml
+test/output/
+test/temp/
 
 # 操作系统
 Thumbs.db
