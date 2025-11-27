@@ -77,28 +77,68 @@ class LooseCouplingModel(GNSSMeasurementModel):
     
     def compute_innovation(self, nominal_state, measurement):
         """
-        计算量测新息
+        计算量测新息（GNSS导航解 - INS名义状态）
         
         Args:
             nominal_state: 名义状态，包含position、velocity
             measurement: GNSS导航解，包含position、velocity
         
         Returns:
-            np.ndarray: 6维新息向量 [δp, δv]
+            np.ndarray: 6维新息向量 [δp(3), δv(3)]
+            
+        量测新息计算：
+        - 位置新息：Δp = pos_GNSS - pos_INS
+        - 速度新息：Δv = vel_GNSS - vel_INS
+        
+        在ESKF框架下，量测新息反映了名义状态的偏差，
+        这些偏差应该与误差状态估计相关联。
         """
-        # TODO: 计算位置和速度残差
-        innovation = np.zeros(6)
+        # 提取名义状态
+        pos_ins = np.array(nominal_state['position'])
+        vel_ins = np.array(nominal_state['velocity'])
+        
+        # 提取GNSS量测
+        pos_gnss = np.array(measurement['position'])
+        vel_gnss = np.array(measurement['velocity'])
+        
+        # 计算新息（GNSS - INS）
+        innovation_pos = pos_gnss - pos_ins
+        innovation_vel = vel_gnss - vel_ins
+        
+        # 组合为6维新息向量
+        innovation = np.concatenate([innovation_pos, innovation_vel])
+        
         return innovation
     
-    def compute_H_matrix(self, nominal_state):
+    def compute_H_matrix(self, nominal_state=None):
         """
         计算量测矩阵 H（6×15）
         
+        Args:
+            nominal_state: 名义状态（此处不需要，因为H是常矩阵）
+        
         Returns:
             np.ndarray: 量测矩阵
+            
+        量测方程线性化：
+        对于位置量测：z_pos = pos_GNSS - pos_INS ≈ δp
+        对于速度量测：z_vel = vel_GNSS - vel_INS ≈ δv
+        
+        因此量测矩阵H为：
+        H = [[0_{3×3}, 0_{3×3}, I_{3×3}, 0_{3×3}, 0_{3×3}],  # 位置量测
+             [0_{3×3}, I_{3×3}, 0_{3×3}, 0_{3×3}, 0_{3×3}]]  # 速度量测
+        
+        误差状态：[δθ(3), δv(3), δp(3), δbg(3), δba(3)]
+        量测：    [Δp(3), Δv(3)]
         """
-        # TODO: 构建H矩阵
         H = np.zeros((6, 15))
+        
+        # 位置量测：观测位置误差δp（误差状态的第6-8维）
+        H[0:3, 6:9] = np.eye(3)
+        
+        # 速度量测：观测速度误差δv（误差状态的第3-5维）
+        H[3:6, 3:6] = np.eye(3)
+        
         return H
     
     def compute_R_matrix(self):
@@ -107,9 +147,22 @@ class LooseCouplingModel(GNSSMeasurementModel):
         
         Returns:
             np.ndarray: 量测噪声协方差矩阵
+            
+        量测噪声协方差（对角阵）：
+        R = diag([σ_pos²·I(3), σ_vel²·I(3)])
+        
+        其中：
+        - σ_pos: GNSS位置噪声标准差（m）
+        - σ_vel: GNSS速度噪声标准差（m/s）
         """
-        # TODO: 构建R矩阵（对角阵）
         R = np.zeros((6, 6))
+        
+        # 位置量测噪声
+        R[0:3, 0:3] = np.eye(3) * (self.position_noise ** 2)
+        
+        # 速度量测噪声
+        R[3:6, 3:6] = np.eye(3) * (self.velocity_noise ** 2)
+        
         return R
 
 

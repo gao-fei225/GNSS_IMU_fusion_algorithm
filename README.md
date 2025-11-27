@@ -42,7 +42,11 @@ pip install -r requirements.txt
   - 实现了 ESKF 核心算法（预测、更新、修正）
   - 完成了完整的单元测试
   - 详见：[第四步实现说明.md](./第四步实现说明.md)
-- ⏳ **第 5 步**：松耦合 ESKF 实现（待完成）
+- ✅ **第 5 步**：松耦合 ESKF 实现（INS + GNSS 导航解）
+  - 实现了松耦合量测模型（位置和速度观测）
+  - 实现了完整的 GNSS 更新流程
+  - 验证了融合效果
+  - 详见：[第五步实现说明.md](./第五步实现说明.md)
 - ⏳ **第 6 步**：紧耦合 ESKF 实现（待完成）
 - ⏳ **第 7 步**：约束与遮挡控制（待完成）
 - ⏳ **第 8 步**：精度评估与可视化（待完成）
@@ -57,6 +61,11 @@ python runners/run_pure_ins.py
 ### 测试 ESKF 模型
 ```bash
 python test/test_eskf.py
+```
+
+### 测试松耦合 ESKF
+```bash
+python test/test_loose_coupling.py
 ```
 
 详见各模块说明和 `runners/` 目录下的实验脚本
