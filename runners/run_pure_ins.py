@@ -33,7 +33,8 @@ GNSSReader = data_reader_module.GNSSReader
 INSMechanization = mechanization_module.INSMechanization
 
 
-def run_pure_ins(imu_file, output_dir=None, initial_state=None, reference_file=None):
+def run_pure_ins(imu_file, output_dir=None, initial_state=None, reference_file=None, 
+                 navigation_frame='ENU', use_alignment=None, alignment_truth=None):
     """
     运行纯INS解算
     
@@ -42,6 +43,9 @@ def run_pure_ins(imu_file, output_dir=None, initial_state=None, reference_file=N
         output_dir: 输出目录（保存结果和图表）
         initial_state: 初始状态字典，包含attitude、velocity、position
         reference_file: 参考轨迹文件（可选，用于误差评估）
+        navigation_frame: 导航坐标系类型 ('ENU' 或 'NED')
+        use_alignment: 对齐方式 ('static', 'truth', None)
+        alignment_truth: 真值文件路径（use_alignment='truth'时使用）
     
     Returns:
         dict: 包含轨迹数据的字典
@@ -58,26 +62,38 @@ def run_pure_ins(imu_file, output_dir=None, initial_state=None, reference_file=N
     n_samples = len(imu_data['timestamp'])
     print(f"  数据点数: {n_samples}")
     print(f"  时间范围: {imu_data['timestamp'][0]:.2f} - {imu_data['timestamp'][-1]:.2f} 秒")
+    print(f"  导航坐标系: {navigation_frame}")
     
-    # 2. 初始化INS
-    print("\n[2/4] 初始化INS解算器...")
+    # 2. 初始对齐
+    print("\n[2/4] 初始对齐...")
     if initial_state is None:
-        # 默认初始状态：原点，静止，水平姿态
-        initial_state = {
-            'attitude': np.array([1.0, 0.0, 0.0, 0.0]),  # 四元数[qw, qx, qy, qz]
-            'velocity': np.array([0.0, 0.0, 0.0]),       # 速度[vx, vy, vz] m/s
-            'position': np.array([0.0, 0.0, 0.0])        # 位置[x, y, z] m
-        }
-        print("  使用默认初始状态（原点、静止、水平）")
+        if use_alignment == 'static':
+            # 静态对齐
+            from ins.initial_alignment import static_alignment
+            initial_state = static_alignment(imu_data, duration=10.0, coordinate_frame=navigation_frame)
+        elif use_alignment == 'truth' and alignment_truth:
+            # 从真值加载（仅用于测试）
+            from ins.initial_alignment import load_initial_state_from_truth
+            initial_state = load_initial_state_from_truth(alignment_truth, navigation_frame=navigation_frame)
+        else:
+            # 默认初始状态：原点，静止，水平姿态
+            initial_state = {
+                'attitude': np.array([1.0, 0.0, 0.0, 0.0]),  # 四元数[qw, qx, qy, qz]
+                'velocity': np.array([0.0, 0.0, 0.0]),       # 速度[vx, vy, vz] m/s
+                'position': np.array([0.0, 0.0, 0.0])        # 位置[x, y, z] m
+            }
+            print("  使用默认初始状态（原点、静止、水平）")
+            print("  ⚠️  警告：默认初值可能与实际严重不符，建议使用对齐方法")
     else:
         print("  使用用户指定的初始状态")
     
-    ins = INSMechanization(initial_state)
+    # 3. 初始化INS
+    ins = INSMechanization(initial_state, navigation_frame=navigation_frame)
     print(f"  初始位置: {ins.position}")
     print(f"  初始速度: {ins.velocity}")
     print(f"  初始姿态（欧拉角，度）: {np.rad2deg(ins.get_euler_angles())}")
     
-    # 3. INS积分
+    # 4. INS积分
     print("\n[3/4] 执行INS积分...")
     timestamps = imu_data['timestamp']
     
@@ -148,6 +164,10 @@ def plot_trajectory(trajectory, output_dir=None):
     """
     绘制轨迹图表
     """
+    # 配置中文字体
+    plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Arial Unicode MS']  # 中文字体
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+    
     timestamps = trajectory['timestamp']
     positions = trajectory['position']
     velocities = trajectory['velocity']
@@ -159,67 +179,67 @@ def plot_trajectory(trajectory, output_dir=None):
     # 1. 2D轨迹（俯视图）
     ax1 = plt.subplot(2, 3, 1)
     ax1.plot(positions[:, 0], positions[:, 1], 'b-', linewidth=1)
-    ax1.plot(positions[0, 0], positions[0, 1], 'go', markersize=10, label='起点')
-    ax1.plot(positions[-1, 0], positions[-1, 1], 'ro', markersize=10, label='终点')
+    ax1.plot(positions[0, 0], positions[0, 1], 'go', markersize=10, label='Start')
+    ax1.plot(positions[-1, 0], positions[-1, 1], 'ro', markersize=10, label='End')
     ax1.set_xlabel('X (m)')
     ax1.set_ylabel('Y (m)')
-    ax1.set_title('2D轨迹（俯视图）')
-    ax1.grid(True)
+    ax1.set_title('2D Trajectory (Top View)', fontsize=12)
+    ax1.grid(True, alpha=0.3)
     ax1.legend()
     ax1.axis('equal')
     
     # 2. 位置随时间变化
     ax2 = plt.subplot(2, 3, 2)
-    ax2.plot(timestamps, positions[:, 0], 'r-', label='X')
-    ax2.plot(timestamps, positions[:, 1], 'g-', label='Y')
-    ax2.plot(timestamps, positions[:, 2], 'b-', label='Z')
-    ax2.set_xlabel('时间 (s)')
-    ax2.set_ylabel('位置 (m)')
-    ax2.set_title('位置随时间变化')
-    ax2.grid(True)
+    ax2.plot(timestamps, positions[:, 0], 'r-', label='X', linewidth=1.5)
+    ax2.plot(timestamps, positions[:, 1], 'g-', label='Y', linewidth=1.5)
+    ax2.plot(timestamps, positions[:, 2], 'b-', label='Z', linewidth=1.5)
+    ax2.set_xlabel('Time (s)')
+    ax2.set_ylabel('Position (m)')
+    ax2.set_title('Position vs Time', fontsize=12)
+    ax2.grid(True, alpha=0.3)
     ax2.legend()
     
     # 3. 速度随时间变化
     ax3 = plt.subplot(2, 3, 3)
-    ax3.plot(timestamps, velocities[:, 0], 'r-', label='Vx')
-    ax3.plot(timestamps, velocities[:, 1], 'g-', label='Vy')
-    ax3.plot(timestamps, velocities[:, 2], 'b-', label='Vz')
-    ax3.set_xlabel('时间 (s)')
-    ax3.set_ylabel('速度 (m/s)')
-    ax3.set_title('速度随时间变化')
-    ax3.grid(True)
+    ax3.plot(timestamps, velocities[:, 0], 'r-', label='Vx', linewidth=1.5)
+    ax3.plot(timestamps, velocities[:, 1], 'g-', label='Vy', linewidth=1.5)
+    ax3.plot(timestamps, velocities[:, 2], 'b-', label='Vz', linewidth=1.5)
+    ax3.set_xlabel('Time (s)')
+    ax3.set_ylabel('Velocity (m/s)')
+    ax3.set_title('Velocity vs Time', fontsize=12)
+    ax3.grid(True, alpha=0.3)
     ax3.legend()
     
     # 4. 姿态角随时间变化
     ax4 = plt.subplot(2, 3, 4)
-    ax4.plot(timestamps, euler_angles[:, 0], 'r-', label='Roll')
-    ax4.plot(timestamps, euler_angles[:, 1], 'g-', label='Pitch')
-    ax4.plot(timestamps, euler_angles[:, 2], 'b-', label='Yaw')
-    ax4.set_xlabel('时间 (s)')
-    ax4.set_ylabel('姿态角 (度)')
-    ax4.set_title('姿态角随时间变化')
-    ax4.grid(True)
+    ax4.plot(timestamps, euler_angles[:, 0], 'r-', label='Roll', linewidth=1.5)
+    ax4.plot(timestamps, euler_angles[:, 1], 'g-', label='Pitch', linewidth=1.5)
+    ax4.plot(timestamps, euler_angles[:, 2], 'b-', label='Yaw', linewidth=1.5)
+    ax4.set_xlabel('Time (s)')
+    ax4.set_ylabel('Attitude (deg)')
+    ax4.set_title('Attitude vs Time', fontsize=12)
+    ax4.grid(True, alpha=0.3)
     ax4.legend()
     
     # 5. 3D轨迹
     ax5 = fig.add_subplot(2, 3, 5, projection='3d')
-    ax5.plot(positions[:, 0], positions[:, 1], positions[:, 2], 'b-', linewidth=1)
-    ax5.plot([positions[0, 0]], [positions[0, 1]], [positions[0, 2]], 'go', markersize=10, label='起点')
-    ax5.plot([positions[-1, 0]], [positions[-1, 1]], [positions[-1, 2]], 'ro', markersize=10, label='终点')
+    ax5.plot(positions[:, 0], positions[:, 1], positions[:, 2], 'b-', linewidth=1.5)
+    ax5.plot([positions[0, 0]], [positions[0, 1]], [positions[0, 2]], 'go', markersize=10, label='Start')
+    ax5.plot([positions[-1, 0]], [positions[-1, 1]], [positions[-1, 2]], 'ro', markersize=10, label='End')
     ax5.set_xlabel('X (m)')
     ax5.set_ylabel('Y (m)')
     ax5.set_zlabel('Z (m)')
-    ax5.set_title('3D轨迹')
+    ax5.set_title('3D Trajectory', fontsize=12)
     ax5.legend()
     
     # 6. 速度大小随时间变化
     ax6 = plt.subplot(2, 3, 6)
     speed = np.linalg.norm(velocities, axis=1)
-    ax6.plot(timestamps, speed, 'b-')
-    ax6.set_xlabel('时间 (s)')
-    ax6.set_ylabel('速度大小 (m/s)')
-    ax6.set_title('速度大小随时间变化')
-    ax6.grid(True)
+    ax6.plot(timestamps, speed, 'b-', linewidth=1.5)
+    ax6.set_xlabel('Time (s)')
+    ax6.set_ylabel('Speed (m/s)')
+    ax6.set_title('Speed Magnitude vs Time', fontsize=12)
+    ax6.grid(True, alpha=0.3)
     
     plt.tight_layout()
     
@@ -268,6 +288,11 @@ if __name__ == "__main__":
     parser.add_argument('--imu', type=str, required=True, help='IMU数据文件路径')
     parser.add_argument('--output', type=str, default='results/pure_ins', help='输出目录')
     parser.add_argument('--ref', type=str, default=None, help='参考轨迹文件（可选）')
+    parser.add_argument('--frame', type=str, default='ENU', choices=['ENU', 'NED'],
+                       help='导航坐标系类型 (默认: ENU)')
+    parser.add_argument('--align', type=str, default=None, choices=['static', 'truth'],
+                       help='初始对齐方式: static=静态对齐, truth=从真值加载')
+    parser.add_argument('--truth', type=str, default=None, help='真值文件路径（用于对齐或评估）')
     
     args = parser.parse_args()
     
@@ -275,5 +300,8 @@ if __name__ == "__main__":
     trajectory = run_pure_ins(
         imu_file=args.imu,
         output_dir=args.output,
-        reference_file=args.ref
+        reference_file=args.ref,
+        navigation_frame=args.frame,
+        use_alignment=args.align,
+        alignment_truth=args.truth
     )

@@ -28,24 +28,36 @@ class INSMechanization:
     5. 积分得到位置
     """
     
-    def __init__(self, initial_state, gravity=None):
+    def __init__(self, initial_state, gravity=None, navigation_frame='ENU'):
         """
         初始化INS编排解算器
         
         Args:
             initial_state: 初始状态字典，包含
-                - attitude: 初始姿态（四元数 [qw, qx, qy, qz]）
-                - velocity: 初始速度 [vx, vy, vz]（m/s）
-                - position: 初始位置 [x, y, z]（m）
-            gravity: 重力向量（导航坐标系），默认为ENU坐标系的重力向量
+                - attitude: 初始姿态（四元数 [qw, qx, qy, qz]，机体系到导航系的旋转）
+                - velocity: 初始速度 [v1, v2, v3]（m/s，导航坐标系）
+                - position: 初始位置 [p1, p2, p3]（m，导航坐标系）
+            gravity: 重力向量（导航坐标系），默认根据navigation_frame自动设置
+            navigation_frame: 导航坐标系类型
+                - 'ENU': 东-北-天（Z向上为正），重力 = [0, 0, -9.81]
+                - 'NED': 北-东-地（Z向下为正），重力 = [0, 0, 9.81]
+        
+        注意：机体坐标系（body frame）可以是任意定义（如FRD），
+              但导航坐标系必须明确指定（ENU或NED）
         """
         self.attitude = np.array(initial_state['attitude'], dtype=np.float64)
         self.velocity = np.array(initial_state['velocity'], dtype=np.float64)
         self.position = np.array(initial_state['position'], dtype=np.float64)
+        self.navigation_frame = navigation_frame
         
-        # 重力向量（导航坐标系，ENU: [0, 0, -9.81], NED: [0, 0, 9.81]）
+        # 重力向量（导航坐标系）
         if gravity is None:
-            self.gravity = np.array([0, 0, -9.81], dtype=np.float64)  # ENU坐标系
+            if navigation_frame == 'ENU':
+                self.gravity = np.array([0, 0, -9.81], dtype=np.float64)  # Z向上，重力向下
+            elif navigation_frame == 'NED':
+                self.gravity = np.array([0, 0, 9.81], dtype=np.float64)  # Z向下，重力向下
+            else:
+                raise ValueError(f"不支持的导航坐标系: {navigation_frame}，请使用 'ENU' 或 'NED'")
         else:
             self.gravity = np.array(gravity, dtype=np.float64)
         

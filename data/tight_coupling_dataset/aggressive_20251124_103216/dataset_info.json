@@ -1,0 +1,50 @@
+{
+  "scenario": "aggressive",
+  "motion_file": "motion_def-aggressive.csv",
+  "imu_samples": 23100,
+  "gps_samples": 2310,
+  "imu_rate": 100.0,
+  "gps_rate": 10.0,
+  "n_satellites": 8,
+  "satellite_ids": [
+    10,
+    30,
+    3,
+    19,
+    15,
+    9,
+    12,
+    4
+  ],
+  "data_files": {
+    "imu": [
+      "time.csv",
+      "accel-0.csv",
+      "gyro-0.csv"
+    ],
+    "gps": [
+      "gps_time.csv",
+      "gps-0.csv"
+    ],
+    "reference": [
+      "ref_pos.csv",
+      "ref_vel.csv",
+      "ref_att_euler.csv"
+    ],
+    "satellite": [
+      "elevation.csv",
+      "azimuth.csv",
+      "cn0.csv",
+      "pseudorange.csv",
+      "carrier_phase.csv",
+      "doppler.csv",
+      "velocity_doppler.csv"
+    ],
+    "dop": [
+      "gdop.csv",
+      "pdop.csv",
+      "hdop.csv",
+      "vdop.csv"
+    ]
+  }
+}

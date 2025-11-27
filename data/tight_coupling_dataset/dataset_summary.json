@@ -1,0 +1,270 @@
+{
+  "total_scenarios": 10,
+  "generation_time": "2025-11-24T10:32:30.597545",
+  "datasets": [
+    {
+      "name": "static_test",
+      "path": "./tight_coupling_dataset/static_test_20251124_103202",
+      "description": "静态测试，用于初始化和零偏估计",
+      "imu_config": "mid",
+      "gps_config": "standard"
+    },
+    {
+      "name": "3d_motion",
+      "path": "./tight_coupling_dataset/3d_motion_20251124_103204",
+      "description": "简单3D运动，包含上升下降",
+      "imu_config": "mid",
+      "gps_config": "standard"
+    },
+    {
+      "name": "90deg_turn",
+      "path": "./tight_coupling_dataset/90deg_turn_20251124_103205",
+      "description": "90度转弯测试",
+      "imu_config": "mid",
+      "gps_config": "standard"
+    },
+    {
+      "name": "long_drive",
+      "path": "./tight_coupling_dataset/long_drive_20251124_103211",
+      "description": "长距离行驶，低精度IMU",
+      "imu_config": "low",
+      "gps_config": "standard"
+    },
+    {
+      "name": "aggressive",
+      "path": "./tight_coupling_dataset/aggressive_20251124_103216",
+      "description": "激进机动，高精度IMU",
+      "imu_config": "high",
+      "gps_config": "standard"
+    },
+    {
+      "name": "ins_test",
+      "path": "./tight_coupling_dataset/ins_test_20251124_103221",
+      "description": "典型INS测试轨迹",
+      "imu_config": "mid",
+      "gps_config": "standard"
+    },
+    {
+      "name": "tunnel",
+      "path": "./tight_coupling_dataset/tunnel_20251124_103227",
+      "description": "隧道场景，GPS信号衰减",
+      "imu_config": "mid",
+      "gps_config": "degraded"
+    },
+    {
+      "name": "rtk_test",
+      "path": "./tight_coupling_dataset/rtk_test_20251124_103229",
+      "description": "RTK高精度定位测试",
+      "imu_config": "high",
+      "gps_config": "rtk"
+    },
+    {
+      "name": "acceleration",
+      "path": "./tight_coupling_dataset/acceleration_20251124_103230",
+      "description": "0到100加速测试",
+      "imu_config": "mid",
+      "gps_config": "standard"
+    },
+    {
+      "name": "deceleration",
+      "path": "./tight_coupling_dataset/deceleration_20251124_103230",
+      "description": "100到0减速测试",
+      "imu_config": "mid",
+      "gps_config": "standard"
+    }
+  ],
+  "imu_configs": {
+    "low": {
+      "gyro_b": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_arw": [
+        2.5,
+        2.5,
+        2.5
+      ],
+      "gyro_b_stability": [
+        35.0,
+        35.0,
+        35.0
+      ],
+      "gyro_b_corr": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "accel_b": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "accel_vrw": [
+        0.3,
+        0.3,
+        0.5
+      ],
+      "accel_b_stability": [
+        0.001,
+        0.001,
+        0.001
+      ],
+      "accel_b_corr": [
+        200.0,
+        200.0,
+        200.0
+      ],
+      "mag_std": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "mid": {
+      "gyro_b": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_arw": [
+        0.25,
+        0.25,
+        0.25
+      ],
+      "gyro_b_stability": [
+        3.5,
+        3.5,
+        3.5
+      ],
+      "gyro_b_corr": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "accel_b": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "accel_vrw": [
+        0.03,
+        0.03,
+        0.05
+      ],
+      "accel_b_stability": [
+        0.0001,
+        0.0001,
+        0.0001
+      ],
+      "accel_b_corr": [
+        200.0,
+        200.0,
+        200.0
+      ],
+      "mag_std": [
+        0.2,
+        0.2,
+        0.2
+      ]
+    },
+    "high": {
+      "gyro_b": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "gyro_arw": [
+        0.015,
+        0.015,
+        0.015
+      ],
+      "gyro_b_stability": [
+        0.1,
+        0.1,
+        0.1
+      ],
+      "gyro_b_corr": [
+        100.0,
+        100.0,
+        100.0
+      ],
+      "accel_b": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "accel_vrw": [
+        0.001,
+        0.001,
+        0.002
+      ],
+      "accel_b_stability": [
+        1e-05,
+        1e-05,
+        1e-05
+      ],
+      "accel_b_corr": [
+        200.0,
+        200.0,
+        200.0
+      ],
+      "mag_std": [
+        0.05,
+        0.05,
+        0.05
+      ]
+    }
+  },
+  "gps_configs": {
+    "standard": {
+      "stdp": [
+        3.0,
+        3.0,
+        5.0
+      ],
+      "stdv": [
+        0.1,
+        0.1,
+        0.15
+      ]
+    },
+    "degraded": {
+      "stdp": [
+        10.0,
+        10.0,
+        15.0
+      ],
+      "stdv": [
+        0.5,
+        0.5,
+        0.8
+      ]
+    },
+    "rtk": {
+      "stdp": [
+        0.1,
+        0.1,
+        0.2
+      ],
+      "stdv": [
+        0.01,
+        0.01,
+        0.02
+      ]
+    }
+  },
+  "data_description": {
+    "pseudorange": "伪距观测值（米）",
+    "carrier_phase": "载波相位观测值（周）",
+    "doppler": "多普勒频移（Hz）",
+    "velocity_doppler": "基于速度的多普勒（Hz）",
+    "cn0": "载噪比（dB-Hz）",
+    "elevation": "卫星高度角（度）",
+    "azimuth": "卫星方位角（度）",
+    "gdop": "几何精度因子",
+    "pdop": "位置精度因子",
+    "hdop": "水平精度因子",
+    "vdop": "垂直精度因子"
+  }
+}

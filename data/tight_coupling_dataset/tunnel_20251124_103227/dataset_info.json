@@ -1,0 +1,50 @@
+{
+  "scenario": "tunnel",
+  "motion_file": "motion_def-Holland_tunnel.csv",
+  "imu_samples": 52940,
+  "gps_samples": 5294,
+  "imu_rate": 100.0,
+  "gps_rate": 10.0,
+  "n_satellites": 8,
+  "satellite_ids": [
+    9,
+    1,
+    20,
+    8,
+    26,
+    23,
+    10,
+    4
+  ],
+  "data_files": {
+    "imu": [
+      "time.csv",
+      "accel-0.csv",
+      "gyro-0.csv"
+    ],
+    "gps": [
+      "gps_time.csv",
+      "gps-0.csv"
+    ],
+    "reference": [
+      "ref_pos.csv",
+      "ref_vel.csv",
+      "ref_att_euler.csv"
+    ],
+    "satellite": [
+      "elevation.csv",
+      "azimuth.csv",
+      "cn0.csv",
+      "pseudorange.csv",
+      "carrier_phase.csv",
+      "doppler.csv",
+      "velocity_doppler.csv"
+    ],
+    "dop": [
+      "gdop.csv",
+      "pdop.csv",
+      "hdop.csv",
+      "vdop.csv"
+    ]
+  }
+}
